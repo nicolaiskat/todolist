@@ -1,0 +1,52 @@
+﻿@page "/fetchdata/edit/{id}"
+@inject ToDoListService ToDoService
+@inject NavigationManager uriHelper
+
+
+@using todolist_blazor_app.Data
+
+<PageTitle>ToDoListTask</PageTitle>
+
+<h1>ToDoListTask</h1>
+nh 
+@if (todo == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+    else
+        {
+            <ol class="table">
+                <li>Id: @todo.id</li>
+                <li>Text: @todo.text</li>
+                <li>Done: @todo.done</li>
+            </ol>
+        }
+
+        <input type="text" placeholder="Ny Todo" @bind="Text" />
+        <a class="btn" @onclick="ChangeName">Ændre til ny todo</a>
+
+
+@code {
+    [Parameter] public string id { get; set; }
+    private string Text;
+    private ToDoListTask todo = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();    }
+
+    private async Task LoadDataAsync()
+    {
+        ToDoListTask?[] list;
+        list = await ToDoService.GetTodo(id);
+        todo = list[0];
+    }
+
+    private async Task ChangeName()
+    {
+        ToDoListTask newTask = new(Text, todo.done);
+        newTask.id = todo.id;
+        await ToDoService.PutTodoListTasks(newTask);
+        uriHelper.NavigateTo("fetchdata");
+    }
+}

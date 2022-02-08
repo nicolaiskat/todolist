@@ -1,0 +1,94 @@
+﻿@page "/fetchdata"
+@inject ToDoListService ToDoService
+  
+@using todolist_blazor_app.Data
+
+<PageTitle>ToDoListTask</PageTitle>
+
+<h1>ToDoListTask</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (todolisttasks == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <p><b>Ny Todo Task</b></p>
+    <input type="text" placeholder="Todo" @bind="Text"/>
+    <input type="checkbox" @bind="Done"/>
+    <button @onclick="PostTask">Create task</button>
+    <p>-----------------------------------------</p>
+
+    @foreach (var task in todolisttasks)
+        {
+            <ol class="table">
+                <li>Id: @task.id</li>
+                <li>Text: @task.text</li>
+                <li>Done: @task.done</li>
+            </ol>
+            @if (task.done == false)
+                {
+                <a class="btn" @onclick="() => CompleteTask(task)">Task is complete</a>
+                }
+            else
+                {
+                <a @onclick="() => UnCompleteTask(task)">Task is not completed</a>
+                }
+            <a class="btn" @onclick="() => DeleteTask(task)">Delete</a>
+            <a class="btn" href='@string.Format("https://localhost:7032/fetchdata/edit/{0}", task.id)'>Edit</a>
+            <p>-----------------------------------------</p>
+        }
+
+    
+
+}
+
+@code {
+    private ToDoListTask[]? todolisttasks;
+    private string Text;
+    private bool Done = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        todolisttasks = await ToDoService.GetTodoListTasks();
+    }
+
+    private async Task PostTask()
+    {
+        ToDoListTask newTask = new(Text, Done);
+        Text = ""; Done = true;
+        await ToDoService.PostTodoListTasks(newTask);
+        await LoadDataAsync();
+    }
+
+    private async Task CompleteTask(ToDoListTask newTask)
+    {
+        newTask.TaskCompleted();
+
+        await ToDoService.PutTodoListTasks(newTask);
+        await LoadDataAsync();
+    }
+
+    private async Task UnCompleteTask(ToDoListTask newTask)
+    {
+        newTask.TaskNotCompleted();
+
+        await ToDoService.PutTodoListTasks(newTask);
+        await LoadDataAsync();
+    }
+
+    private async Task DeleteTask(ToDoListTask newTask)
+    {
+        await ToDoService.DeleteTodoListTasks(newTask);
+        await LoadDataAsync();
+    }
+
+
+    }
